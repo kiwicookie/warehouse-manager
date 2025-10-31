@@ -1,0 +1,117 @@
+body {
+  font-family: "Noto Sans KR", sans-serif;
+  background: #f8f9fa;
+  color: #333;
+  margin: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  margin: 0 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+  border: none;
+  background: #007bff;
+  color: white;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.tabs button:hover {
+  background: #0056b3;
+}
+
+/* 검색창 */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.search-bar select,
+.search-bar input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* 표 */
+.table-container {
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+}
+
+table {
+  width: 95%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 6px rgba(0,0,0,0.1);
+}
+
+th, td {
+  border: 1px solid #ddd;
+  text-align: center;
+  padding: 10px;
+  height: 70px;
+}
+
+th {
+  background: #f1f1f1;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background: #fafafa;
+}
+
+/* 상품 이미지 */
+.product-img {
+  width: 120px;
+  height: auto;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.product-img:hover {
+  transform: scale(1.05);
+}
+
+/* 장바구니 및 기록 */
+#cartItems div, .history-record {
+  padding: 6px 0;
+}
+
+/* 이미지 확대 모달 */
+#imageModal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+#imageModal img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: 10px;
+}
