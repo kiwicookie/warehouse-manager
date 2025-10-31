@@ -8,11 +8,19 @@ let searchSort = { key: null, dir: 1 };
 let cartSort = { key: null, dir: 1 };
 let historySort = { key: null, dir: 1 };
 
+let filteredHistory = null; // 현재 표시용 필터링된 리스트
+
 // 초기 탭
 showTab('home');
 
 // -------------------- 탭 --------------------
 function showTab(tabId) {
+  document.querySelectorAll('.tabs button').forEach(t => {
+    t.style.background = '#6672d9'; // 기본 파란색
+  });
+  const activeBtn = document.getElementById('tab-' + tabId);
+  if (activeBtn) activeBtn.style.background = '#ff7f50'; // 선택 주황색
+
   document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
   const el = document.getElementById(tabId);
   if (!el) return;
@@ -228,7 +236,7 @@ function paySelected() {
   processPayment(itemsToPay);
 }
 function processPayment(items) {
-  const rec = { date: new Date().toLocaleString(), items: JSON.parse(JSON.stringify(items)) };
+  const rec = { date: new Date().toISOString(), items: JSON.parse(JSON.stringify(items)) };
   history.push(rec);
   renderHistory();
   // generate order text (same format)
@@ -241,17 +249,27 @@ function processPayment(items) {
 }
 
 // -------------------- HISTORY --------------------
-function renderHistory() {
+// history 렌더링 (필터 적용 가능)
+function renderHistory(list = null) {
+  const data = list || history;
   const tbody = document.getElementById('historyList');
   tbody.innerHTML = '';
-  if (!history.length) { tbody.innerHTML = '<tr><td colspan="10">기록이 없습니다.</td></tr>'; updateHistorySortIndicator(); return; }
-  // flatten items to rows while maintaining record idx and item idx
+
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="10">기록이 없습니다.</td></tr>';
+    updateHistorySortIndicator();
+    return;
+  }
+
+  // flatten items to rows
   let flat = [];
-  history.forEach((rec, rIdx) => {
+  data.forEach((rec, rIdx) => {
     rec.items.forEach((it, iIdx) => flat.push({ recordIndex: rIdx, itemIndex: iIdx, date: rec.date, ...it }));
   });
+
   if (historySort.key) flat.sort((a,b)=>compareValues(a[historySort.key], b[historySort.key], historySort.dir));
-  flat.forEach((it, idx) => {
+
+  flat.forEach(it => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input type="checkbox" class="hist-check" data-record="${it.recordIndex}" data-item="${it.itemIndex}"></td>
@@ -267,6 +285,7 @@ function renderHistory() {
     `;
     tbody.appendChild(tr);
   });
+
   updateHistorySortIndicator();
 }
 
@@ -353,7 +372,140 @@ function updateHistorySortIndicator() {
     if (sp) sp.innerText = historySort.dir===1? '▲':'▼';
   }
 }
+function applyHistoryDateFilter() {
+  const start = document.getElementById('historyStartDate').value;
+  const end = document.getElementById('historyEndDate').value;
+  if (!start || !end) { showToast('시작일과 종료일을 선택하세요.'); return; }
 
+  const startDate = new Date(start + 'T00:00:00');
+  const endDate = new Date(end + 'T23:59:59');
+
+  filteredHistory = history.filter(rec => {
+    // history.date를 ISO 형식으로 변환
+    const recDate = new Date(new Date(rec.date).toISOString());
+    return recDate >= startDate && recDate <= endDate;
+  });
+
+  renderHistory(filteredHistory);
+  showToast(`${filteredHistory.length}개의 기록이 필터링되었습니다.`);
+}
+//function applyHistoryDateFilter() {
+//  const rec = { date: new Date().toISOString(), items: JSON.parse(JSON.stringify(items)) };
+//  const start = document.getElementById('historyStartDate').value;
+//  const end = document.getElementById('historyEndDate').value;
+//  if (!start || !end) { showToast('시작일과 종료일을 선택하세요.'); return; }
+//
+//  const startDate = new Date(start + 'T00:00:00');
+//  const endDate = new Date(end + 'T23:59:59');
+//
+//  filteredHistory = history.filter(rec => {
+//    const recDate = new Date(rec.date);
+//    return recDate >= startDate && recDate <= endDate;
+//  });
+//
+//  renderHistory();
+//  showToast(`${filteredHistory.length}개의 기록이 필터링되었습니다.`);
+//}
+function filterHistory() {
+  const key = document.getElementById('historySearchKey').value;
+  const kw = document.getElementById('historySearchInput').value.trim();
+  if (!kw) { showToast('검색어를 입력하세요'); return; }
+
+  const source = filteredHistory || history; // 기간 필터 적용 후에도 검색 가능
+  filteredHistory = source.filter(rec =>
+    rec.items.some(it => {
+      if (key === 'all') {
+        return (
+          (it.name||'').includes(kw) ||
+          (it.name_chi||'').includes(kw) ||
+          (it.kr||'').includes(kw) ||
+          (it.ch||'').includes(kw) ||
+          (it.color||'').includes(kw)
+        );
+      } else {
+        const v = it[key] || '';
+        return String(v).includes(kw);
+      }
+    })
+  );
+
+  renderHistory();
+  showToast(`${filteredHistory.length}개의 기록이 검색되었습니다.`);
+}
+
+// 필터 초기화 (전체 기록 보여주기)
+function resetHistoryFilter() {
+  filteredHistory = null;
+  renderHistory();
+  document.getElementById('historyStartDate').value = '';
+  document.getElementById('historyEndDate').value = '';
+  document.getElementById('historySearchInput').value = '';
+  showToast('전체 기록으로 복귀했습니다.');
+}
+
+// renderHistory 수정: filteredHistory 존재 시 이것 사용
+function renderHistory() {
+  const tbody = document.getElementById('historyList');
+  tbody.innerHTML = '';
+
+  const source = filteredHistory || history;
+
+  if (!source.length) {
+    tbody.innerHTML = '<tr><td colspan="10">기록이 없습니다.</td></tr>';
+    updateHistorySortIndicator();
+    return;
+  }
+
+  // flatten items
+  let flat = [];
+  source.forEach((rec, rIdx) => {
+    rec.items.forEach((it, iIdx) => flat.push({ recordIndex: rIdx, itemIndex: iIdx, date: rec.date, ...it }));
+  });
+
+  if (historySort.key) flat.sort((a,b)=>compareValues(a[historySort.key], b[historySort.key], historySort.dir));
+
+  flat.forEach((it, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" class="hist-check" data-record="${it.recordIndex}" data-item="${it.itemIndex}"></td>
+      <td class="td-img"><img class="thumb" src="${it.image}" onclick="openImage('${it.image}')"></td>
+      <td>${escapeHtml(it.name)}</td>
+      <td>${escapeHtml(it.name_chi)}</td>
+      <td>${escapeHtml(it.kr)}</td>
+      <td>${escapeHtml(it.ch)}</td>
+      <td>${escapeHtml(it.color)}</td>
+      <td>${it.price} 위안</td>
+      <td>${it.qty}</td>
+      <td>${it.date}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  updateHistorySortIndicator();
+}
+// 엑셀 다운로드
+function downloadHistoryExcel() {
+  if (!history.length) { showToast('기록이 없습니다.'); return; }
+  const flat = [];
+  history.forEach(rec => {
+    rec.items.forEach(it => {
+      flat.push({
+        '상품명': it.name,
+        '상품명(중국어)': it.name_chi,
+        'KR번호': it.kr,
+        'CH번호': it.ch,
+        '색상': it.color,
+        '가격(위안)': it.price,
+        '수량': it.qty,
+        '기록일': rec.date
+      });
+    });
+  });
+  const ws = XLSX.utils.json_to_sheet(flat);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "History");
+  XLSX.writeFile(wb, `주문기록_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
 // -------------------- MINI CART --------------------
 function toggleMiniCart() {
   const panel = document.getElementById('miniCartPanel');
@@ -367,13 +519,21 @@ function renderMiniCart() {
   cart.forEach(it => {
     const div = document.createElement('div');
     div.className = 'mini-item';
-    div.innerHTML = `<img src="${it.image}"><div class="mini-info">KR: ${escapeHtml(it.kr)}<br>수량: ${it.qty}</div>`;
+    div.innerHTML = `<img src="${it.image}"><div class="mini-info">KR: ${escapeHtml(it.kr)}<br>CH: ${escapeHtml(it.ch)}<br>수량: ${it.qty}</div>`;
     list.appendChild(div);
   });
 }
 function updateMiniCart() { document.getElementById('miniCount').innerText = cart.reduce((s,i)=>s+i.qty,0); const panel = document.getElementById('miniCartPanel'); if (panel.style.display==='block') renderMiniCart(); }
 
 // -------------------- UTIL --------------------
+function clearOrderText() {
+  document.getElementById('orderText').innerText = '';
+  showToast('주문문구가 초기화되었습니다.');
+}
+function clearHistoryText() {
+  document.getElementById('historyText').innerText = '';
+  showToast('기록 주문문구가 초기화되었습니다.');
+}
 function openImage(src) { const modal = document.getElementById('imageModal'); document.getElementById('modalImage').src = src; modal.style.display = 'flex'; }
 function closeImage() { document.getElementById('imageModal').style.display = 'none'; }
 

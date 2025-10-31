@@ -4,15 +4,16 @@
   <meta charset="UTF-8" />
   <title>Welldone 물류 관리</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.sheetjs.com/xlsx-0.19.2/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <h1>Welldone 물류 관리 시스템</h1>
 
   <div class="tabs">
-    <button onclick="showTab('home')">Home</button>
-    <button onclick="showTab('search')">검색</button>
-    <button onclick="showTab('cart')">장바구니</button>
-    <button onclick="showTab('history')">기록</button>
+    <button id="tab-home" onclick="showTab('home')">Home</button>
+    <button id="tab-search" onclick="showTab('search')">검색</button>
+    <button id="tab-cart" onclick="showTab('cart')">장바구니</button>
+    <button id="tab-history" onclick="showTab('history')">기록</button>
   </div>
 
   <!-- HOME -->
@@ -100,19 +101,43 @@
     <div class="order-text-area">
       <h3>주문 문구</h3>
       <pre id="orderText" class="order-text"></pre>
+      <button class="btn" onclick="clearOrderText()">초기화</button>
     </div>
   </div>
 
   <!-- HISTORY -->
   <div id="history" class="tab" style="display:none;">
+
     <div class="sheet-header">
       <h2>주문 기록</h2>
       <div class="sort-indicator" id="historySortIndicator">정렬: 없음</div>
+      <button onclick="downloadHistoryExcel()" style="padding:6px 10px; margin-left:10px; border-radius:6px; background:#ffa500; color:white; border:none; cursor:pointer;">엑셀 다운로드</button>
     </div>
 
     <div class="history-controls" style="margin:8px auto; width:95%; text-align:left;">
       <button onclick="reprintSelectedHistory()">메시지 재출력</button>
       <button onclick="promptDeleteSelectedHistory()">선택 삭제</button>
+
+      <h2>필터링</h2>
+      <!-- 기간 필터 -->
+      <button class="btn" onclick="resetHistoryFilter()">전체보기</button>
+      <br>
+      <label>시작일: <input type="date" id="historyStartDate"></label>
+      <label>종료일: <input type="date" id="historyEndDate"></label>
+      <button class="btn" onclick="applyHistoryDateFilter()">기간 필터</button>
+      <br>
+      <select id="historySearchKey">
+        <option value="all">전체</option>
+        <option value="name">상품명(한국)</option>
+        <option value="name_chi">상품명(중국)</option>
+        <option value="kr">한국품번</option>
+        <option value="ch">중국품번</option>
+        <option value="color">색상</option>
+      </select>
+      <input type="text" id="historySearchInput" placeholder="검색어 입력">
+      <button class="btn" onclick="filterHistory()">검색</button>
+
+
     </div>
 
     <table id="historyTable">
@@ -127,7 +152,7 @@
           <th onclick="setHistorySort('color')">색상 <span id="history-sort-color" class="arrow"></span></th>
           <th onclick="setHistorySort('price')">가격(위안) <span id="history-sort-price" class="arrow"></span></th>
           <th onclick="setHistorySort('qty')">수량 <span id="history-sort-qty" class="arrow"></span></th>
-          <th>기록일</th>
+          <th onclick="setHistorySort('date')">기록일 <span id="history-sort-date" class="arrow"></span></th>
         </tr>
       </thead>
       <tbody id="historyList"></tbody>
@@ -136,6 +161,7 @@
     <div class="history-text-area">
       <h3>주문 문구</h3>
       <pre id="historyText" class="history-text"></pre>
+      <button class="btn" onclick="clearHistoryText()">초기화</button>
     </div>
   </div>
 
@@ -147,7 +173,7 @@
     <img id="modalImage" src="">
   </div>
 
-  <!-- 삭제 확인 모달 (초기 숨김) -->
+  <!-- 삭제 확인 모달 -->
   <div id="confirmModal" class="confirm-modal" style="display:none;">
     <div class="confirm-box">
       <p><strong>정말로 삭제하시겠습니까?</strong></p>
@@ -170,6 +196,8 @@
       <button onclick="toggleMiniCart()">닫기</button>
     </div>
   </div>
+
+  <!-- SheetJS for Excel export -->
 
   <script src="app.js"></script>
 </body>

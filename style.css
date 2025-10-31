@@ -14,7 +14,7 @@ h1 { margin:0; padding:18px; background:#2b3a67; color:white; }
 .tabs button:hover { background:#4e57b8; }
 
 .tab { padding:14px 10px 40px 10px; }
-
+.tabs button.active { background:#ff7f50; }
 /* sheet header */
 .sheet-header { display:flex; justify-content:space-between; align-items:center; width:95%; margin:8px auto; }
 .sort-indicator { font-size:14px; color:#555; }
