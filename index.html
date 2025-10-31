@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>의류 도매 물류 관리</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <button onclick="showTab('search')">검색</button>
+    <button onclick="showTab('cart')">장바구니</button>
+    <button onclick="showTab('history')">기록</button>
+    <button onclick="showTab('register')">등록</button>
+  </nav>
+
+  <section id="search" class="tab"></section>
+  <section id="cart" class="tab" style="display:none;"></section>
+  <section id="history" class="tab" style="display:none;"></section>
+  <section id="register" class="tab" style="display:none;">
+    <p>등록 기능은 아직 준비 중입니다.</p>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
