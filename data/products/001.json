@@ -1,5 +1,9 @@
 {
-  "product_num": "001",
-  "name": "베이직 후드티",
-  "price": 12000
+  "product_num_master": "1",
+  "product_num_chi": "236",
+  "product_num_kor": "253",
+  "colors": ["곤색", "베이지색"],
+  "name_chi": "a",
+  "name_kor": "13710042901",
+  "price_yuan": 26
 }
