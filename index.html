@@ -1,76 +1,174 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>의류 도매 물류 관리</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Welldone 물류 관리</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>WellDone의~~ 의류 도매 물류 관리 ^0^ //</h1>
+  <h1>Welldone 물류 관리 시스템</h1>
 
   <div class="tabs">
+    <button onclick="showTab('home')">Home</button>
     <button onclick="showTab('search')">검색</button>
     <button onclick="showTab('cart')">장바구니</button>
     <button onclick="showTab('history')">기록</button>
-    <button onclick="showTab('register')">등록</button>
   </div>
 
-  <!-- 검색 탭 -->
-  <div id="search" class="tab">
-    <h2>상품 검색</h2>
-    <div class="search-bar">
-      <select id="searchKey">
-        <option value="">전체</option>
-        <option value="name_kor">상품명(한글)</option>
-        <option value="name_chi">상품명(중국어)</option>
-        <option value="product_num_kor">상품번호(KR)</option>
-        <option value="product_num_chi">상품번호(CH)</option>
-        <option value="colors">색상</option>
+  <!-- HOME -->
+  <div id="home" class="tab">
+    <h2>안녕하세요! welldone의 물류 관리 페이지에 오신 것을 환영합니다! LOVEY 화이팅~!</h2>
+  </div>
+
+  <!-- SEARCH -->
+  <div id="search" class="tab" style="display:none;">
+    <div class="sheet-header">
+      <h2>상품 검색</h2>
+      <div class="sort-indicator" id="searchSortIndicator">정렬: 없음</div>
+    </div>
+
+    <div class="search-controls">
+      <select id="searchKey" onchange="filterProducts()">
+        <option value="all">전체</option>
+        <option value="name_kor">한국명</option>
+        <option value="name_chi">중국명</option>
+        <option value="product_num_kor">KR번호</option>
+        <option value="product_num_chi">CH번호</option>
         <option value="price_yuan">가격</option>
       </select>
-      <input type="text" id="searchInput" placeholder="검색어 입력..." oninput="filterProducts()">
+      <input type="text" id="searchInput" placeholder="검색어 입력..." oninput="filterProducts()" />
     </div>
 
-    <div class="table-container">
-      <table id="productTable">
-        <thead>
-          <tr>
-            <th>이미지</th>
-            <th>상품명(한글)</th>
-            <th>중국명</th>
-            <th>CH 번호</th>
-            <th>KR 번호</th>
-            <th>색상</th>
-            <th>가격(¥)</th>
-            <th>담기</th>
-          </tr>
-        </thead>
-        <tbody id="productList"></tbody>
-      </table>
+    <table id="productTable">
+      <thead>
+        <tr>
+          <th>이미지</th>
+          <th onclick="setSearchSort('name_kor')">한국명 <span id="search-sort-name_kor" class="arrow"></span></th>
+          <th onclick="setSearchSort('name_chi')">중국명 <span id="search-sort-name_chi" class="arrow"></span></th>
+          <th onclick="setSearchSort('product_num_kor')">KR번호 <span id="search-sort-product_num_kor" class="arrow"></span></th>
+          <th onclick="setSearchSort('product_num_chi')">CH번호 <span id="search-sort-product_num_chi" class="arrow"></span></th>
+          <th>색상</th>
+          <th onclick="setSearchSort('price_yuan')">가격(위안) <span id="search-sort-price_yuan" class="arrow"></span></th>
+          <th>수량</th>
+          <th>담기</th>
+        </tr>
+      </thead>
+      <tbody id="productList"></tbody>
+    </table>
+  </div>
+
+  <!-- CART -->
+  <div id="cart" class="tab" style="display:none;">
+    <div class="sheet-header">
+      <h2>장바구니</h2>
+      <div class="sort-indicator" id="cartSortIndicator">정렬: 없음</div>
+    </div>
+
+    <div class="cart-controls">
+      <button onclick="toggleAllCartChecks(true)">전체선택</button>
+      <button onclick="toggleAllCartChecks(false)">전체해제</button>
+      <button onclick="removeSelectedFromCart()">선택 삭제</button>
+    </div>
+
+    <div class="cart-summary">
+      <div>선택 상품 금액: <span id="selectedTotal">0</span> 위안</div>
+      <div>총 상품 금액: <span id="totalAmount">0</span> 위안</div>
+    </div>
+
+    <table id="cartTable">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="cartSelectAll" onchange="onCartSelectAllChange(this)"></th>
+          <th>이미지</th>
+          <th onclick="setCartSort('name')">한국명 <span id="cart-sort-name" class="arrow"></span></th>
+          <th onclick="setCartSort('name_chi')">중국명 <span id="cart-sort-name_chi" class="arrow"></span></th>
+          <th onclick="setCartSort('kr')">KR번호 <span id="cart-sort-kr" class="arrow"></span></th>
+          <th onclick="setCartSort('ch')">CH번호 <span id="cart-sort-ch" class="arrow"></span></th>
+          <th onclick="setCartSort('color')">색상 <span id="cart-sort-color" class="arrow"></span></th>
+          <th onclick="setCartSort('price')">가격(위안) <span id="cart-sort-price" class="arrow"></span></th>
+          <th onclick="setCartSort('qty')">수량 <span id="cart-sort-qty" class="arrow"></span></th>
+        </tr>
+      </thead>
+      <tbody id="cartItems"></tbody>
+    </table>
+
+    <div class="cart-actions">
+      <button onclick="payAll()">전체 결제</button>
+      <button onclick="paySelected()">선택 상품 결제</button>
+    </div>
+
+    <div class="order-text-area">
+      <h3>주문 문구</h3>
+      <pre id="orderText" class="order-text"></pre>
     </div>
   </div>
 
-  <!-- 장바구니 탭 -->
-  <div id="cart" class="tab" style="display:none">
-    <h2>장바구니</h2>
-    <div id="cartItems"></div>
-    <button onclick="checkout()">결제 (시뮬레이션)</button>
+  <!-- HISTORY -->
+  <div id="history" class="tab" style="display:none;">
+    <div class="sheet-header">
+      <h2>주문 기록</h2>
+      <div class="sort-indicator" id="historySortIndicator">정렬: 없음</div>
+    </div>
+
+    <div class="history-controls" style="margin:8px auto; width:95%; text-align:left;">
+      <button onclick="reprintSelectedHistory()">메시지 재출력</button>
+      <button onclick="promptDeleteSelectedHistory()">선택 삭제</button>
+    </div>
+
+    <table id="historyTable">
+      <thead>
+        <tr>
+          <th>선택</th>
+          <th>이미지</th>
+          <th onclick="setHistorySort('name')">한국명 <span id="history-sort-name" class="arrow"></span></th>
+          <th onclick="setHistorySort('name_chi')">중국명 <span id="history-sort-name_chi" class="arrow"></span></th>
+          <th onclick="setHistorySort('kr')">KR번호 <span id="history-sort-kr" class="arrow"></span></th>
+          <th onclick="setHistorySort('ch')">CH번호 <span id="history-sort-ch" class="arrow"></span></th>
+          <th onclick="setHistorySort('color')">색상 <span id="history-sort-color" class="arrow"></span></th>
+          <th onclick="setHistorySort('price')">가격(위안) <span id="history-sort-price" class="arrow"></span></th>
+          <th onclick="setHistorySort('qty')">수량 <span id="history-sort-qty" class="arrow"></span></th>
+          <th>기록일</th>
+        </tr>
+      </thead>
+      <tbody id="historyList"></tbody>
+    </table>
+
+    <div class="history-text-area">
+      <h3>주문 문구</h3>
+      <pre id="historyText" class="history-text"></pre>
+    </div>
   </div>
 
-  <!-- 기록 탭 -->
-  <div id="history" class="tab" style="display:none">
-    <h2>주문 기록</h2>
-    <div id="historyList"></div>
+  <!-- 토스트 -->
+  <div id="toast"></div>
+
+  <!-- 이미지 모달 -->
+  <div id="imageModal" class="modal" onclick="closeImage()">
+    <img id="modalImage" src="">
   </div>
 
-  <!-- 등록 탭 -->
-  <div id="register" class="tab" style="display:none">
-    <h2>등록 (미구현) 헤헤... 공사중입니당~~</h2>
+  <!-- 삭제 확인 모달 (초기 숨김) -->
+  <div id="confirmModal" class="confirm-modal" style="display:none;">
+    <div class="confirm-box">
+      <p><strong>정말로 삭제하시겠습니까?</strong></p>
+      <p>해당 삭제는 로그 기록을 영구적이게 삭제하는 행위입니다. 꼭 심사숙고 하시고 삭제하시길 바랍니다.</p>
+      <div class="confirm-actions">
+        <button onclick="closeConfirm()">취소</button>
+        <button class="danger" onclick="deleteSelectedHistoryConfirmed()">삭제!</button>
+      </div>
+    </div>
   </div>
 
-  <!-- 이미지 확대 모달 -->
-  <div id="imageModal">
-    <img id="modalImage" src="" alt="확대 이미지">
+  <!-- 미니 카트 버튼 및 패널 -->
+  <div id="miniCartBtn" onclick="toggleMiniCart()">
+    🧺 <span id="miniCount">0</span>
+  </div>
+  <div id="miniCartPanel" class="miniCartPanel" style="display:none;">
+    <div class="mini-header">장바구니 (미리보기)</div>
+    <div id="miniList" class="mini-list"></div>
+    <div class="mini-footer">
+      <button onclick="toggleMiniCart()">닫기</button>
+    </div>
   </div>
 
   <script src="app.js"></script>
